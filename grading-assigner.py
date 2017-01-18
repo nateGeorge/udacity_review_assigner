@@ -234,4 +234,4 @@ if __name__ == "__main__":
         logger.setLevel(logging.DEBUG)
 
     set_headers(args.token)
-    #request_reviews()
+    request_reviews()
