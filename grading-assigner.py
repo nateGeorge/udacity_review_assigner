@@ -89,6 +89,7 @@ def refresh_request(current_request):
         logger.info('No active request was found/refreshed.  Loop and either wait for < 2 to be assigned or immediately create')
         return None
     else:
+        logger.info('Request refreshed, id is ' + str(refresh_resp.json()['id']))
         return refresh_resp.json()
 
 def fetch_certified_pairs():
@@ -132,8 +133,12 @@ def request_reviews():
                                         json={'projects': project_language_pairs},
                                         headers=headers)
             current_request = create_resp.json() if create_resp.status_code == 201 else None
+            if current_request:
+                logger.info('request id:' + str(create_resp.json()['id']))
+            else:
+                logger.info('request returned' + str(create_resp))
         else:
-            logger.info(current_request)
+            logger.info('request id:' + str(current_request['id']))
             closing_at = parser.parse(current_request['closed_at'])
 
             utcnow = datetime.utcnow()
@@ -194,6 +199,7 @@ def get_wait_stats():
             coll.insert_one(info)
 
     me_resp = requests.get(ME_REQUEST_URL, headers=headers)
+    coll = db['wait_stats']
     if len(me_resp.json()) > 0:
         for r in me_resp.json():
             req_id = r['id']
@@ -201,7 +207,6 @@ def get_wait_stats():
             wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
             info = wait_stats.json()[0]
             info['datetime'] = datetime.now()
-            coll = db['wait_stats']
             coll.insert_one(info)
 
     client.close()
