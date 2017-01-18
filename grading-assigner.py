@@ -169,7 +169,7 @@ def get_wait_stats():
     Gets place in line and number of available reviews for each available
     project, and stores to mongoDB.
     """
-    logger.info("Requesting certifications...")
+    logger.info("Getting wait/assignment stats")
     me_resp = requests.get(ME_URL, headers=headers)
     me_resp.raise_for_status()
     languages = me_resp.json()['application']['languages'] or ['en-us']
