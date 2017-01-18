@@ -3,6 +3,8 @@ import signal
 import sys
 import argparse
 import logging
+# for ipython
+reload(logging)
 import os
 import requests
 import time
@@ -10,10 +12,12 @@ import pytz
 from dateutil import parser
 from datetime import datetime, timedelta
 import send_messages as sm
+from pymongo import MongoClient
 
 utc = pytz.UTC
 
 # Script config
+DB_NAME = 'udacity_reviews'
 BASE_URL = 'https://review-api.udacity.com/api/v1'
 CERTS_URL = '{}/me/certifications.json'.format(BASE_URL)
 ME_URL = '{}/me'.format(BASE_URL)
@@ -25,6 +29,9 @@ PUT_REQUEST_URL_TMPL = '{}/submission_requests/{}.json'
 REFRESH_URL_TMPL = '{}/submission_requests/{}/refresh.json'
 ASSIGNED_COUNT_URL = '{}/me/submissions/assigned_count.json'.format(BASE_URL)
 ASSIGNED_URL = '{}/me/submissions/assigned.json'.format(BASE_URL)
+# fill with submission_request_id from ME_REQUEST_URL
+WAIT_URL = '{}/submission_requests/{}/waits.json'
+
 
 REVIEW_URL = 'https://review.udacity.com/#!/submissions/{sid}'
 REQUESTS_PER_SECOND = 1 # Max frequency allowed by Udacity
@@ -56,6 +63,7 @@ def alert_for_assignment(current_request, headers):
         logger.info("View it here: " + REVIEW_URL.format(sid=current_request['submission_id']))
         logger.info("=================================================")
         logger.info("Continuing to poll...")
+        # sends text and email
         sm.send_messages(link=REVIEW_URL.format(sid=current_request['submission_id']))
         return None
     return current_request
@@ -63,11 +71,12 @@ def alert_for_assignment(current_request, headers):
 def wait_for_assign_eligible():
     while True:
         assigned_resp = requests.get(ASSIGNED_COUNT_URL, headers=headers)
+        get_wait_stats()
         if assigned_resp.status_code == 404 or assigned_resp.json()['assigned_count'] < 2:
             break
         else:
             logger.info('Waiting for assigned submissions < 2')
-        # Wait 30 seconds before checking to see if < 2 open submissions
+        # Wait 10 seconds before checking to see if < 2 open submissions
         # that is, waiting until a create submission request will be permitted
         time.sleep(30.0)
 
@@ -100,10 +109,7 @@ def fetch_certified_pairs():
 
     return [{'project_id': project_id, 'language': lang} for project_id in project_ids for lang in languages]
 
-def request_reviews(token):
-    global headers
-    headers = {'Authorization': token, 'Content-Length': '0'}
-
+def request_reviews():
     project_language_pairs = fetch_certified_pairs()
     logger.info("Will poll for projects/languages %s", str(project_language_pairs))
 
@@ -152,6 +158,60 @@ def request_reviews(token):
             # Wait 2 minutes before next check to see if the request has been fulfilled
             time.sleep(120.0)
 
+
+def get_wait_stats():
+    """
+    Gets place in line and number of available reviews for each available
+    project, and stores to mongoDB.
+    """
+    logger.info("Requesting certifications...")
+    me_resp = requests.get(ME_URL, headers=headers)
+    me_resp.raise_for_status()
+    languages = me_resp.json()['application']['languages'] or ['en-us']
+
+    certs_resp = requests.get(CERTS_URL, headers=headers)
+    certs_resp.raise_for_status()
+
+    certs = certs_resp.json()
+    info = {}
+    client = MongoClient()
+    db = client[DB_NAME]
+    coll = db['available_reviews']
+    for lang in languages:
+        for cert in certs:
+            if not cert['status'] == 'certified':
+                continue
+
+            info['name'] = cert['project']['name']
+            info['project_id'] = cert['project']['id']
+            info['language'] = lang
+            try:
+                info['wait_count'] = cert['project']['awaiting_review_count_by_language'][lang]
+            except KeyError:
+                info['wait_count'] = 0
+            # now insert into mongodb
+            info['datetime'] = datetime.now()
+            coll.insert_one(info)
+
+    me_resp = requests.get(ME_REQUEST_URL, headers=headers)
+    if len(me_resp.json()) > 0:
+        for r in me_resp.json():
+            req_id = r['id']
+            logger.info('request id:' + str(req_id))
+            wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
+            info = wait_stats.json()[0]
+            info['datetime'] = datetime.now()
+            coll = db['wait_stats']
+            coll.insert_one(info)
+
+    client.close()
+
+
+def set_headers(token):
+    global headers
+    headers = {'Authorization': token, 'Content-Length': '0'}
+
+
 if __name__ == "__main__":
     cmd_parser = argparse.ArgumentParser(description =
 	"Poll the Udacity reviews API to claim projects to review."
@@ -173,4 +233,5 @@ if __name__ == "__main__":
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
-    request_reviews(args.token)
+    set_headers(args.token)
+    #request_reviews()
