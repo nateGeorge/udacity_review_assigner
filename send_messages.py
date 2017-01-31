@@ -33,6 +33,28 @@ def compose_email(from_addr, to, link):
 
     return email_text
 
+
+def compose_error(from_addr, to, error):
+    '''
+    sends email with link to udacity project to review
+
+    args:
+    from_line -- string; email address the message is from
+    to -- list of strings; email addresses the message is to
+    link -- string; link to udacity project to review
+    '''
+    subject = 'Error on Udacity server: {}'.format(error)
+    body = "You've been assigned a review!\n\nCheck this link: {}".format(error)
+
+    email_text = ("From: %s\n"
+                    "To: %s\n"
+                    "Subject: %s\n"
+                    ""
+                    "%s") % (from_addr, ", ".join(to), subject, body)
+
+    return email_text
+
+
 def send_messages(link, text=True):
     '''
     sends text and email notifying of reviews assigned
@@ -46,6 +68,31 @@ def send_messages(link, text=True):
     if text:
         to = [phone_email, email_addr]
     email_text = compose_email(from_addr=gmail_user, to=to, link=link)
+    print email_text
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.ehlo()
+        server.starttls()
+        server.login(gmail_user, gmail_password)
+        server.sendmail(gmail_user, to, email_text)
+        server.close()
+    except:
+        print 'Something went wrong...'
+        print 'Couldn\'t email'
+
+def send_error(error, text=True):
+    '''
+    sends text and email notifying of reviews assigned
+
+    args:
+    link -- string; link to udacity review that has been assigned
+    text -- boolean; if True will send a text message
+    '''
+    gmail_user, gmail_password, phone_email, email_addr = get_env_vars()
+    to = [email_addr]
+    if text:
+        to = [phone_email, email_addr]
+    email_text = compose_error(from_addr=gmail_user, to=to, error=error)
     print email_text
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)

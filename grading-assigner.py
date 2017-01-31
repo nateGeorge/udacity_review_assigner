@@ -13,6 +13,7 @@ from dateutil import parser
 from datetime import datetime, timedelta
 import send_messages as sm
 from pymongo import MongoClient
+import traceback
 
 utc = pytz.UTC
 
@@ -196,6 +197,7 @@ def get_wait_stats():
                 info['wait_count'] = 0
             # now insert into mongodb
             info['datetime'] = datetime.now()
+            print info
             coll.insert_one(info)
 
     me_resp = requests.get(ME_REQUEST_URL, headers=headers)
@@ -207,6 +209,7 @@ def get_wait_stats():
             wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
             info = wait_stats.json()[0]
             info['datetime'] = datetime.now()
+            print info
             coll.insert_one(info)
 
     client.close()
@@ -239,4 +242,10 @@ if __name__ == "__main__":
         logger.setLevel(logging.DEBUG)
 
     set_headers(args.token)
-    request_reviews()
+        try:
+            request_reviews()
+        except Exception as e:
+            sm.send_error(error=e)
+            trackback.print_exc()
+            mtn = pytz.timezone('US/Mountain')
+            print datetime.now(mtn)
