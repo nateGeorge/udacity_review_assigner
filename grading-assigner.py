@@ -197,7 +197,6 @@ def get_wait_stats():
                 info['wait_count'] = 0
             # now insert into mongodb
             info['datetime'] = datetime.now()
-            print info
             coll.insert_one(info)
             client.close()
 
@@ -213,7 +212,6 @@ def get_wait_stats():
             wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
             info = wait_stats.json()[0]
             info['datetime'] = datetime.now()
-            print info
             coll.insert_one(info)
             client.close()
 
