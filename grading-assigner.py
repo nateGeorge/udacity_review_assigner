@@ -242,10 +242,10 @@ if __name__ == "__main__":
         logger.setLevel(logging.DEBUG)
 
     set_headers(args.token)
-        try:
-            request_reviews()
-        except Exception as e:
-            sm.send_error(error=e)
-            trackback.print_exc()
-            mtn = pytz.timezone('US/Mountain')
-            print datetime.now(mtn)
+    try:
+        request_reviews()
+    except Exception as e:
+        sm.send_error(error=e)
+        trackback.print_exc()
+        mtn = pytz.timezone('US/Mountain')
+        print datetime.now(mtn)
