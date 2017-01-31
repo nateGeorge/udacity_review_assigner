@@ -179,15 +179,15 @@ def get_wait_stats():
     certs_resp.raise_for_status()
 
     certs = certs_resp.json()
-    info = {}
-    client = MongoClient()
-    db = client[DB_NAME]
-    coll = db['available_reviews']
     for lang in languages:
         for cert in certs:
             if not cert['status'] == 'certified':
                 continue
 
+            info = {}
+            client = MongoClient()
+            db = client[DB_NAME]
+            coll = db['available_reviews']
             info['name'] = cert['project']['name']
             info['project_id'] = cert['project']['id']
             info['language'] = lang
@@ -199,11 +199,15 @@ def get_wait_stats():
             info['datetime'] = datetime.now()
             print info
             coll.insert_one(info)
+            client.close()
 
     me_resp = requests.get(ME_REQUEST_URL, headers=headers)
-    coll = db['wait_stats']
     if len(me_resp.json()) > 0:
         for r in me_resp.json():
+            info = {}
+            client = MongoClient()
+            db = client[DB_NAME]
+            coll = db['wait_stats']
             req_id = r['id']
             logger.info('request id:' + str(req_id))
             wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
@@ -211,8 +215,7 @@ def get_wait_stats():
             info['datetime'] = datetime.now()
             print info
             coll.insert_one(info)
-
-    client.close()
+            client.close()
 
 
 def set_headers(token):
@@ -246,6 +249,6 @@ if __name__ == "__main__":
         request_reviews()
     except Exception as e:
         sm.send_error(error=e)
-        trackback.print_exc()
+        traceback.print_exc()
         mtn = pytz.timezone('US/Mountain')
         print datetime.now(mtn)
