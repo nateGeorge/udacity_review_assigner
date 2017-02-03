@@ -221,6 +221,17 @@ def set_headers(token):
     headers = {'Authorization': token, 'Content-Length': '0'}
 
 
+def run_main():
+    set_headers(args.token)
+    try:
+        request_reviews()
+    except Exception as e:
+        sm.send_error(error=e)
+        traceback.print_exc()
+        mtn = pytz.timezone('US/Mountain')
+        print datetime.now(mtn)
+        run_main()
+
 if __name__ == "__main__":
     cmd_parser = argparse.ArgumentParser(description =
 	"Poll the Udacity reviews API to claim projects to review."
@@ -242,11 +253,4 @@ if __name__ == "__main__":
     if args.debug:
         logger.setLevel(logging.DEBUG)
 
-    set_headers(args.token)
-    try:
-        request_reviews()
-    except Exception as e:
-        sm.send_error(error=e)
-        traceback.print_exc()
-        mtn = pytz.timezone('US/Mountain')
-        print datetime.now(mtn)
+    run_main()
