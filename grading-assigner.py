@@ -103,7 +103,13 @@ def fetch_certified_pairs():
     certs_resp.raise_for_status()
 
     certs = certs_resp.json()
-    project_ids = [cert['project']['id'] for cert in certs if cert['status'] == 'certified']
+    for c in certs:
+        if c['status'] == 'certified':
+            print 'project:', c['project']['name'], ', id:', c['project']['id']
+
+    exclude_list = [232] # movie data...not enough time for this one right now
+    project_ids = [cert['project']['id'] for cert in certs if (cert['status'] == 'certified' and cert['project']['id'] not in exclude_list)]
+
 
     logger.info("Found certifications for project IDs: %s in languages %s",
                 str(project_ids), str(languages))
@@ -230,6 +236,7 @@ def run_main():
         traceback.print_exc()
         mtn = pytz.timezone('US/Mountain')
         print datetime.now(mtn)
+        time.sleep(30) # wait 30 seconsd to let any errors clear out
         run_main()
 
 if __name__ == "__main__":
