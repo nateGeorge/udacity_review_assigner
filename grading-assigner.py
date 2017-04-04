@@ -206,11 +206,11 @@ def get_wait_stats():
             coll = db['available_reviews']
             info['name'] = cert['project']['name']
             info['project_id'] = cert['project']['id']
-            logger.info('project: ' + info['name'] + ', id:' + info['project_id'])
+            logger.info('project: ' + info['name'] + ', id:' + str(info['project_id']))
             info['language'] = lang
             try:
                 info['wait_count'] = cert['project']['awaiting_review_count_by_language'][lang]
-                logger.info('wait count: ' + info['wait_count'])
+                logger.info('wait count: ' + str(info['wait_count']))
             except KeyError:
                 logger.info('couldn\'t get wait count; key error')
                 info['wait_count'] = 0
@@ -245,6 +245,7 @@ def run_main():
     try:
         request_reviews()
     except Exception as e:
+        print 'error!!!!'
         sm.send_error(error=e)
         traceback.print_exc()
         mtn = pytz.timezone('US/Mountain')
