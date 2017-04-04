@@ -202,11 +202,11 @@ def get_wait_stats():
             coll = db['available_reviews']
             info['name'] = cert['project']['name']
             info['project_id'] = cert['project']['id']
-            logger.info('project:', info['name'] + ',', 'id:', info['project_id'])
+            logger.info('project: ' + info['name'] + ', id:' + info['project_id'])
             info['language'] = lang
             try:
                 info['wait_count'] = cert['project']['awaiting_review_count_by_language'][lang]
-                logger.info('wait count:', info['wait_count'])
+                logger.info('wait count: ' + info['wait_count'])
             except KeyError:
                 logger.info('couldn\'t get wait count; key error')
                 info['wait_count'] = 0
