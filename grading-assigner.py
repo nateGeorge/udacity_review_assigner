@@ -69,8 +69,9 @@ def alert_for_assignment(current_request, headers):
         logger.info("=================================================")
         logger.info("Continuing to poll...")
         # sends text and email
+        proj_name = proj_id_dict[current_request['submission_request_projects']['id']]
         sm.send_messages(link=REVIEW_URL.format(sid=current_request['submission_id']),
-                        project=current_request['submission_request_projects']['id'])
+                        project=proj_name)
         return None
     return current_request
 
