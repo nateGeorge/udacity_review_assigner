@@ -142,8 +142,8 @@ def request_reviews():
         # Loop and wait until fewer than 2 reviews assigned, as creating
         # a request will fail
         resp_id = None
-        if create_resp is not None:
-            resp_id = create_resp.json()['id']
+        if current_request is not None:
+            resp_id = current_request.json()['id']
         wait_for_assign_eligible(resp_id)
         if current_request is None:
             logger.info('Creating a request for ' + str(len(project_language_pairs)) +
