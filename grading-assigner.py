@@ -232,7 +232,7 @@ def get_wait_stats():
             logger.info('request id:' + str(req_id))
             wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
             info = wait_stats.json()[0]
-            proj_name = proj_id_dict[str(wait_stats.json()['project_id'])]
+            proj_name = proj_id_dict[int(wait_stats.json()['project_id'])]
             print 'in position' + wait_stats.json()['position'] + ' for project ' + proj_name
             info['datetime'] = datetime.now()
             info['project_name'] = proj_name
