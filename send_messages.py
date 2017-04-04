@@ -13,7 +13,7 @@ def get_env_vars():
     email_addr = os.getenv('my_email_addr')
     return gmail_user, gmail_password, phone_email, email_addr
 
-def compose_email(from_addr, to, link):
+def compose_email(from_addr, to, link, project):
     '''
     sends email with link to udacity project to review
 
@@ -22,8 +22,8 @@ def compose_email(from_addr, to, link):
     to -- list of strings; email addresses the message is to
     link -- string; link to udacity project to review
     '''
-    subject = 'Review assigned'
-    body = "You've been assigned a review!\n\nCheck this link: {}".format(link)
+    subject = '%s review assigned' % (project)
+    body = "You've been assigned a review for {}!\n\nCheck this link: {}".format(project, link)
 
     email_text = ("From: %s\n"
                     "To: %s\n"

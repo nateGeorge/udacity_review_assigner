@@ -37,6 +37,10 @@ WAIT_URL = '{}/submission_requests/{}/waits.json'
 REVIEW_URL = 'https://review.udacity.com/#!/submissions/{sid}'
 REQUESTS_PER_SECOND = 1 # Max frequency allowed by Udacity
 
+# projects to skip and not auto assign
+exclude_list = [232] # movie data...not enough time for this one right now
+proj_id_dict = {} # dict for going from project id number to text
+
 logging.basicConfig(format='|%(asctime)s| %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -65,7 +69,8 @@ def alert_for_assignment(current_request, headers):
         logger.info("=================================================")
         logger.info("Continuing to poll...")
         # sends text and email
-        sm.send_messages(link=REVIEW_URL.format(sid=current_request['submission_id']))
+        sm.send_messages(link=REVIEW_URL.format(sid=current_request['submission_id']),
+                        project=current_request['submission_request_projects']['id'])
         return None
     return current_request
 
@@ -106,10 +111,11 @@ def fetch_certified_pairs():
     for c in certs:
         if c['status'] == 'certified':
             print 'project:', c['project']['name'], ', id:', c['project']['id']
+            the_id = c['project']['id']
+            if the_id not in exclude_list:
+                proj_id_dict[the_id] = c['project']['name']
 
-    exclude_list = [232] # movie data...not enough time for this one right now
     project_ids = [cert['project']['id'] for cert in certs if (cert['status'] == 'certified' and cert['project']['id'] not in exclude_list)]
-
 
     logger.info("Found certifications for project IDs: %s in languages %s",
                 str(project_ids), str(languages))
@@ -132,7 +138,6 @@ def request_reviews():
         # Loop and wait until fewer than 2 reviews assigned, as creating
         # a request will fail
         wait_for_assign_eligible()
-
         if current_request is None:
             logger.info('Creating a request for ' + str(len(project_language_pairs)) +
                         ' possible project/language combinations')
@@ -144,6 +149,7 @@ def request_reviews():
                 logger.info('request id:' + str(create_resp.json()['id']))
             else:
                 logger.info('request returned' + str(create_resp))
+            current_request = alert_for_assignment(current_request, headers)
         else:
             logger.info('request id:' + str(current_request['id']))
             closing_at = parser.parse(current_request['closed_at'])
