@@ -78,10 +78,10 @@ def alert_for_assignment(current_request, headers):
         return None
     return current_request
 
-def wait_for_assign_eligible(resp_id):
+def wait_for_assign_eligible():
     while True:
         assigned_resp = requests.get(ASSIGNED_COUNT_URL, headers=headers)
-        get_wait_stats(resp_id)
+        get_wait_stats()
         if assigned_resp.status_code == 404 or assigned_resp.json()['assigned_count'] < 2:
             break
         else:
@@ -141,10 +141,7 @@ def request_reviews():
     while True:
         # Loop and wait until fewer than 2 reviews assigned, as creating
         # a request will fail
-        resp_id = None
-        if current_request is not None:
-            resp_id = current_request.json()['id']
-        wait_for_assign_eligible(resp_id)
+        wait_for_assign_eligible()
         if current_request is None:
             logger.info('Creating a request for ' + str(len(project_language_pairs)) +
                         ' possible project/language combinations')
