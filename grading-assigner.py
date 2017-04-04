@@ -71,6 +71,8 @@ def alert_for_assignment(current_request, headers):
         # sends text and email
         proj_name = proj_id_dict[current_request['submission_request_projects']['id']]
         print 'project name: ' + proj_name
+        for i in range(10):
+            print '---'
         sm.send_messages(link=REVIEW_URL.format(sid=current_request['submission_id']),
                         project=proj_name)
         return None
