@@ -231,7 +231,8 @@ def get_wait_stats():
             req_id = r['id']
             logger.info('request id:' + str(req_id))
             wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
-            for p in wait_stats:
+            print str(wait_stats.json())
+            for p in wait_stats.json():
                 info = p
                 proj_name = proj_id_dict[int(p.json()['project_id'])]
                 print 'in position' + p.json()['position'] + ' for project ' + proj_name
