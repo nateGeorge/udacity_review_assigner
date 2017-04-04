@@ -208,8 +208,9 @@ def get_wait_stats():
             info['project_id'] = cert['project']['id']
             logger.info('project: ' + info['name'] + ', id:' + str(info['project_id']))
             info['language'] = lang
+            print cert['project']
             try:
-                info['wait_count'] = cert['project']['awaiting_review_count_by_language'][lang]
+                info['wait_count'] = cert['project']['awaiting_review_count']
                 logger.info('wait count: ' + str(info['wait_count']))
             except KeyError:
                 logger.info('couldn\'t get wait count; key error')
