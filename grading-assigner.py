@@ -78,10 +78,10 @@ def alert_for_assignment(current_request, headers):
         return None
     return current_request
 
-def wait_for_assign_eligible():
+def wait_for_assign_eligible(resp_id):
     while True:
         assigned_resp = requests.get(ASSIGNED_COUNT_URL, headers=headers)
-        get_wait_stats()
+        get_wait_stats(resp_id)
         if assigned_resp.status_code == 404 or assigned_resp.json()['assigned_count'] < 2:
             break
         else:
@@ -141,7 +141,10 @@ def request_reviews():
     while True:
         # Loop and wait until fewer than 2 reviews assigned, as creating
         # a request will fail
-        wait_for_assign_eligible()
+        resp_id = None
+        if create_resp is not None:
+            resp_id = create_resp.json()['id'])
+        wait_for_assign_eligible(resp_id)
         if current_request is None:
             logger.info('Creating a request for ' + str(len(project_language_pairs)) +
                         ' possible project/language combinations')
@@ -210,7 +213,7 @@ def get_wait_stats():
             info['language'] = lang
             try:
                 info['wait_count'] = cert['project']['awaiting_review_count']
-                logger.info('wait count: ' + str(info['wait_count']))
+                logger.info('awaiting review: ' + str(info['wait_count']) + ' for project ' + info['name'])
             except KeyError:
                 logger.info('couldn\'t get wait count; key error')
                 info['wait_count'] = 0
@@ -230,9 +233,25 @@ def get_wait_stats():
             logger.info('request id:' + str(req_id))
             wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
             info = wait_stats.json()[0]
+            proj_name = proj_id_dict[wait_stats['project_id']]
+            print 'in position' + wait_stats['position'] + ' for project ' + proj_name
             info['datetime'] = datetime.now()
+            info['project_name'] = proj_name
             coll.insert_one(info)
             client.close()
+
+    # waits_resp = requests.get('{}/submission_requests/{}/waits'.format(BASE_URL, resp_id))
+    # if len(waits_resp.json()) > 0:
+    #     for r in waits_resp.json():
+    #         info = {}
+    #         client = MongoClient()
+    #         db = client[DB_NAME]
+    #         coll = db['wait_stats']
+    #         proj_id = r['id']
+    #         proj_name = proj_id_dict[proj_id]
+    #         position = r['position']
+    #         print 'in position ' + str(position) + ' for project ' + proj_name
+    #         info =
 
 
 def set_headers(token):
