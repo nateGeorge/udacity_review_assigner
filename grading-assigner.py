@@ -82,6 +82,7 @@ def wait_for_assign_eligible():
     while True:
         assigned_resp = requests.get(ASSIGNED_COUNT_URL, headers=headers)
         get_wait_stats()
+        current_request = alert_for_assignment(current_request, headers)
         if assigned_resp.status_code == 404 or assigned_resp.json()['assigned_count'] < 2:
             break
         else:
@@ -153,7 +154,6 @@ def request_reviews():
                 logger.info('request id:' + str(create_resp.json()['id']))
             else:
                 logger.info('request returned' + str(create_resp))
-            current_request = alert_for_assignment(current_request, headers)
         else:
             logger.info('request id:' + str(current_request['id']))
             closing_at = parser.parse(current_request['closed_at'])
@@ -175,6 +175,7 @@ def request_reviews():
                 get_req_resp = requests.get(url, headers=headers)
                 current_request = get_req_resp.json() if me_req_resp.status_code == 200 else None
 
+        get_wait_stats()
         current_request = alert_for_assignment(current_request, headers)
         if current_request:
             # Wait 2 minutes before next check to see if the request has been fulfilled
@@ -220,7 +221,7 @@ def get_wait_stats():
             client.close()
 
     me_resp = requests.get(ME_REQUEST_URL, headers=headers)
-    # print 'me_resp:' + me_resp.json()
+    # print 'me_resp:' + str(me_resp.json())
     if len(me_resp.json()) > 0:
         for r in me_resp.json():
             info = {}
@@ -231,7 +232,7 @@ def get_wait_stats():
             logger.info('request id:' + str(req_id))
             wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
             info = wait_stats.json()[0]
-            proj_name = proj_id_dict[wait_stats.json()['project_id']]
+            proj_name = proj_id_dict[str(wait_stats.json()['project_id'])]
             print 'in position' + wait_stats.json()['position'] + ' for project ' + proj_name
             info['datetime'] = datetime.now()
             info['project_name'] = proj_name
