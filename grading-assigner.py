@@ -220,7 +220,7 @@ def get_wait_stats():
             client.close()
 
     me_resp = requests.get(ME_REQUEST_URL, headers=headers)
-    print 'me_resp:' + me_resp.json()
+    # print 'me_resp:' + me_resp.json()
     if len(me_resp.json()) > 0:
         for r in me_resp.json():
             info = {}
