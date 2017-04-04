@@ -206,11 +206,11 @@ def get_wait_stats():
             coll = db['available_reviews']
             info['name'] = cert['project']['name']
             info['project_id'] = cert['project']['id']
-            logger.info('project: ' + info['name'] + ', id:' + str(info['project_id']))
+            logger.info('project: ' + info['name'] + ', id: ' + str(info['project_id']))
             info['language'] = lang
             try:
                 info['wait_count'] = cert['project']['awaiting_review_count']
-                logger.info('awaiting review: ' + str(info['wait_count']) + ' for project ' + info['name'])
+                logger.info('awaiting review: ' + str(info['wait_count']))
             except KeyError:
                 logger.info('couldn\'t get wait count; key error')
                 info['wait_count'] = 0
@@ -220,6 +220,7 @@ def get_wait_stats():
             client.close()
 
     me_resp = requests.get(ME_REQUEST_URL, headers=headers)
+    print 'me_resp:' + me_resp
     if len(me_resp.json()) > 0:
         for r in me_resp.json():
             info = {}
@@ -230,8 +231,8 @@ def get_wait_stats():
             logger.info('request id:' + str(req_id))
             wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
             info = wait_stats.json()[0]
-            proj_name = proj_id_dict[wait_stats['project_id']]
-            print 'in position' + wait_stats['position'] + ' for project ' + proj_name
+            proj_name = proj_id_dict[wait_stats.json()['project_id']]
+            print 'in position' + wait_stats.json()['position'] + ' for project ' + proj_name
             info['datetime'] = datetime.now()
             info['project_name'] = proj_name
             coll.insert_one(info)
