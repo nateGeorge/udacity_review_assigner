@@ -225,18 +225,18 @@ def get_wait_stats():
     # print 'me_resp:' + str(me_resp.json())
     if len(me_resp.json()) > 0:
         for r in me_resp.json():
-            info = {}
             client = MongoClient()
             db = client[DB_NAME]
             coll = db['wait_stats']
             req_id = r['id']
             logger.info('request id:' + str(req_id))
             wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
-            info = wait_stats.json()[0]
-            proj_name = proj_id_dict[int(wait_stats.json()['project_id'])]
-            print 'in position' + wait_stats.json()['position'] + ' for project ' + proj_name
-            info['datetime'] = datetime.now()
-            info['project_name'] = proj_name
+            for p in wait_stats:
+                info = p
+                proj_name = proj_id_dict[int(p.json()['project_id'])]
+                print 'in position' + p.json()['position'] + ' for project ' + proj_name
+                info['datetime'] = datetime.now()
+                info['project_name'] = proj_name
             coll.insert_one(info)
             client.close()
 
