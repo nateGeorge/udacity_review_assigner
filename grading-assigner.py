@@ -78,7 +78,7 @@ def alert_for_assignment(current_request, headers):
         return None
     return current_request
 
-def wait_for_assign_eligible():
+def wait_for_assign_eligible(current_request):
     while True:
         assigned_resp = requests.get(ASSIGNED_COUNT_URL, headers=headers)
         get_wait_stats()
@@ -90,6 +90,7 @@ def wait_for_assign_eligible():
         # Wait 10 seconds before checking to see if < 2 open submissions
         # that is, waiting until a create submission request will be permitted
         time.sleep(30.0)
+    return current_request
 
 def refresh_request(current_request):
     logger.info('Refreshing existing request')
@@ -142,7 +143,7 @@ def request_reviews():
     while True:
         # Loop and wait until fewer than 2 reviews assigned, as creating
         # a request will fail
-        wait_for_assign_eligible()
+        wait_for_assign_eligible(current_request)
         if current_request is None:
             logger.info('Creating a request for ' + str(len(project_language_pairs)) +
                         ' possible project/language combinations')
