@@ -143,7 +143,7 @@ def request_reviews():
         # a request will fail
         resp_id = None
         if create_resp is not None:
-            resp_id = create_resp.json()['id'])
+            resp_id = create_resp.json()['id']
         wait_for_assign_eligible(resp_id)
         if current_request is None:
             logger.info('Creating a request for ' + str(len(project_language_pairs)) +
