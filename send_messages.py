@@ -55,7 +55,7 @@ def compose_error(from_addr, to, error):
     return email_text
 
 
-def send_messages(link, text=True):
+def send_messages(link, project, text=True):
     '''
     sends text and email notifying of reviews assigned
 
@@ -67,7 +67,7 @@ def send_messages(link, text=True):
     to = [email_addr]
     if text:
         to = [phone_email, email_addr]
-    email_text = compose_email(from_addr=gmail_user, to=to, link=link)
+    email_text = compose_email(from_addr=gmail_user, to=to, link=link, project=project)
     print email_text
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
