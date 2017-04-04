@@ -69,7 +69,13 @@ def alert_for_assignment(current_request, headers):
         logger.info("=================================================")
         logger.info("Continuing to poll...")
         # sends text and email
-        proj_name = proj_id_dict[current_request['submission_request_projects']['id']]
+        assigned_resp = requests.get('{}/me/submissions/assigned'.format(BASE_URL), headers=headers)
+        proj = assigned_resp.json()[-1]
+        for p in assigned_resp.json():
+            print p['project']['name']
+            print p['asssigned_at']
+
+        proj_name = p['project']['name']
         print 'project name: ' + proj_name
         for i in range(10):
             print '---'
