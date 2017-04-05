@@ -73,7 +73,7 @@ def alert_for_assignment(current_request, headers):
         proj = assigned_resp.json()[-1]
         for p in assigned_resp.json():
             print p['project']['name']
-            print p['asssigned_at']
+            print p['assigned_at']
 
         proj_name = p['project']['name']
         print 'project name: ' + proj_name
