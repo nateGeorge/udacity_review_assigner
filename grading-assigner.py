@@ -114,7 +114,10 @@ def fetch_certified_pairs():
     logger.info("Requesting certifications...")
     me_resp = requests.get(ME_URL, headers=headers)
     me_resp.raise_for_status()
-    languages = me_resp.json()['application']['languages'] or ['en-us']
+    try:
+        languages = me_resp.json()['application']['languages'] or ['en-us']
+    except KeyError:
+        languages = [u'en']
 
     certs_resp = requests.get(CERTS_URL, headers=headers)
     certs_resp.raise_for_status()
