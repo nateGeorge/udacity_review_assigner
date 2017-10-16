@@ -47,6 +47,8 @@ logger.setLevel(logging.INFO)
 
 headers = None
 
+error_file = 'errors.py'  # for logging errors
+
 def signal_handler(signal, frame):
     if headers:
         logger.info('Cleaning up active request')
@@ -89,10 +91,22 @@ def wait_for_assign_eligible(current_request):
         assigned_resp = requests.get(ASSIGNED_COUNT_URL, headers=headers)
         get_wait_stats()
         current_request = alert_for_assignment(current_request, headers)
-        if assigned_resp.status_code == 404 or assigned_resp.json()['assigned_count'] < 2:
-            break
-        else:
-            logger.info('Waiting for assigned submissions < 2')
+        try:
+            if assigned_resp.status_code == 404 or assigned_resp.json()['assigned_count'] < 2:
+                break
+            else:
+                logger.info('Waiting for assigned submissions < 2')
+        except ValueError:
+            current_request = None
+            with open(error_file, 'ab') as f:
+                f.write(traceback.print_exc())
+                f.write('\n')
+                f.write('assigned_resp:')
+                if assigned_resp is None:
+                    f.write('assigned_resp is None')
+                else:
+                    f.write(assigned_resp)
+
         # Wait 10 seconds before checking to see if < 2 open submissions
         # that is, waiting until a create submission request will be permitted
         time.sleep(30.0)
@@ -183,7 +197,19 @@ def request_reviews():
                 # the request record will no longer be 'fulfilled'
                 url = GET_REQUEST_URL_TMPL.format(BASE_URL, current_request['id'])
                 get_req_resp = requests.get(url, headers=headers)
-                current_request = get_req_resp.json() if me_req_resp.status_code == 200 else None
+                try:
+                    current_request = get_req_resp.json() if me_req_resp.status_code == 200 else None
+                except ValueError:
+                    current_request = None
+                    with open(error_file, 'ab') as f:
+                        f.write(traceback.print_exc())
+                        f.write('\n')
+                        f.write('get_req_resp:')
+                        if get_req_resp is None:
+                            f.write('get_req_resp is None')
+                        else:
+                            f.write(get_req_resp)
+
 
         get_wait_stats()
         current_request = alert_for_assignment(current_request, headers)
@@ -235,22 +261,33 @@ def get_wait_stats():
 
     me_resp = requests.get(ME_REQUEST_URL, headers=headers)
     # print 'me_resp:' + str(me_resp.json())
-    if len(me_resp.json()) > 0:
-        for r in me_resp.json():
-            client = MongoClient()
-            db = client[DB_NAME]
-            coll = db['wait_stats']
-            req_id = r['id']
-            logger.info('request id:' + str(req_id))
-            wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
-            for p in wait_stats.json():
-                info = p
-                proj_name = proj_id_dict[int(p['project_id'])]
-                print 'in position ' + str(p['position']) + ' for project ' + proj_name
-                info['datetime'] = datetime.now()
-                info['project_name'] = proj_name
-            coll.insert_one(info)
-            client.close()
+    try:
+        if len(me_resp.json()) > 0:
+            for r in me_resp.json():
+                client = MongoClient()
+                db = client[DB_NAME]
+                coll = db['wait_stats']
+                req_id = r['id']
+                logger.info('request id:' + str(req_id))
+                wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
+                for p in wait_stats.json():
+                    info = p
+                    proj_name = proj_id_dict[int(p['project_id'])]
+                    print 'in position ' + str(p['position']) + ' for project ' + proj_name
+                    info['datetime'] = datetime.now()
+                    info['project_name'] = proj_name
+                coll.insert_one(info)
+                client.close()
+    except ValueError:
+        current_request = None
+        with open(error_file, 'ab') as f:
+            f.write(traceback.print_exc())
+            f.write('\n')
+            f.write('me_resp:')
+            if me_resp is None:
+                f.write('me_resp is None')
+            else:
+                f.write(me_resp)
 
     # waits_resp = requests.get('{}/submission_requests/{}/waits'.format(BASE_URL, resp_id))
     # if len(waits_resp.json()) > 0:
