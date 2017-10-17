@@ -34,7 +34,7 @@ def compose_email(from_addr, to, link, project):
     return email_text
 
 
-def compose_error(from_addr, to, error):
+def compose_error(from_addr, to, error, tb):
     '''
     sends email with link to udacity project to review
 
@@ -44,7 +44,7 @@ def compose_error(from_addr, to, error):
     link -- string; link to udacity project to review
     '''
     subject = 'Error on Udacity server: {}'.format(error)
-    body = "You've been assigned a review!\n\nCheck this link: {}".format(error)
+    body = "Error: {}".format(error)
 
     email_text = ("From: %s\n"
                     "To: %s\n"
@@ -80,7 +80,7 @@ def send_messages(link, project, text=True):
         print 'Something went wrong...'
         print 'Couldn\'t email'
 
-def send_error(error, text=True):
+def send_error(error, tb, text=True):
     '''
     sends text and email notifying of reviews assigned
 
@@ -92,7 +92,7 @@ def send_error(error, text=True):
     to = [email_addr]
     if text:
         to = [phone_email, email_addr]
-    email_text = compose_error(from_addr=gmail_user, to=to, error=error)
+    email_text = compose_error(from_addr=gmail_user, to=to, error=error, tb=tb)
     print email_text
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)

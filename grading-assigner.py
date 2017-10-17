@@ -128,6 +128,8 @@ def fetch_certified_pairs():
     logger.info("Requesting certifications...")
     me_resp = requests.get(ME_URL, headers=headers)
     me_resp.raise_for_status()
+
+
     try:
         languages = me_resp.json()['application']['languages'] or ['en-us']
     except KeyError:
@@ -314,10 +316,12 @@ def run_main():
         request_reviews()
     except Exception as e:
         print 'error!!!!'
-        sm.send_error(error=e)
-        traceback.print_exc()
-        mtn = pytz.timezone('US/Mountain')
-        print datetime.now(mtn)
+        if type(e) not in [SSLError]:  # if they are rotating the SSL cert, this will happen
+            sm.send_error(error=e, tb=traceback.print_exc(), text=False)
+            traceback.print_exc()
+            mtn = pytz.timezone('US/Mountain')
+            print datetime.now(mtn)
+        
         time.sleep(30) # wait 30 seconsd to let any errors clear out
         run_main()
 
