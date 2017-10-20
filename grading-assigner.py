@@ -7,6 +7,7 @@ import logging
 reload(logging)
 import os
 import requests
+from requests.exceptions import SSLError
 import time
 import pytz
 from dateutil import parser
@@ -321,7 +322,7 @@ def run_main():
             traceback.print_exc()
             mtn = pytz.timezone('US/Mountain')
             print datetime.now(mtn)
-        
+
         time.sleep(30) # wait 30 seconsd to let any errors clear out
         run_main()
 
