@@ -274,6 +274,9 @@ def get_wait_stats():
                 logger.info('request id:' + str(req_id))
                 wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
                 for p in wait_stats.json():
+                    if p == 'error':
+                        continue
+                    
                     info = p
                     print('wait_stats entry:', p)
                     try:
