@@ -275,7 +275,11 @@ def get_wait_stats():
                 wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
                 for p in wait_stats.json():
                     info = p
-                    proj_name = proj_id_dict[int(p['project_id'])]
+                    print('project id:', p['project_id'])
+                    try:
+                        proj_name = proj_id_dict[int(p['project_id'])]
+                    except TypeError:
+                        proj_name = str(p['project_id'])
                     print 'in position ' + str(p['position']) + ' for project ' + proj_name
                     info['datetime'] = datetime.now()
                     info['project_name'] = proj_name
