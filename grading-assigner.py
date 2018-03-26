@@ -276,7 +276,7 @@ def get_wait_stats():
                 for p in wait_stats.json():
                     if p == 'error':
                         continue
-                    
+
                     info = p
                     print('wait_stats entry:', p)
                     try:
@@ -286,7 +286,8 @@ def get_wait_stats():
                     print 'in position ' + str(p['position']) + ' for project ' + proj_name
                     info['datetime'] = datetime.now()
                     info['project_name'] = proj_name
-                coll.insert_one(info)
+                    coll.insert_one(info)
+                    
                 client.close()
     except ValueError:
         current_request = None
