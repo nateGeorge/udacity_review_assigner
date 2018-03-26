@@ -275,7 +275,7 @@ def get_wait_stats():
                 wait_stats = requests.get(WAIT_URL.format(BASE_URL, req_id), headers=headers)
                 for p in wait_stats.json():
                     info = p
-                    print('project id:', p['project_id'])
+                    print('wait_stats entry:', p)
                     try:
                         proj_name = proj_id_dict[int(p['project_id'])]
                     except TypeError:
