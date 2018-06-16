@@ -88,15 +88,18 @@ def alert_for_assignment(current_request, headers):
     return current_request
 
 def wait_for_assign_eligible(current_request):
+    """
+    I think you are now allowed more than 2 assigned reviews at once.
+    """
     while True:
         assigned_resp = requests.get(ASSIGNED_COUNT_URL, headers=headers)
         get_wait_stats()
         current_request = alert_for_assignment(current_request, headers)
         try:
-            if assigned_resp.status_code == 404 or assigned_resp.json()['assigned_count'] < 2:
+            if assigned_resp.status_code == 404 or assigned_resp.json()['assigned_count'] < 1000000:
                 break
             else:
-                logger.info('Waiting for assigned submissions < 2')
+                logger.info('Waiting for assigned submissions < 1000000')
         except ValueError:
             current_request = None
             with open(error_file, 'ab') as f:
